@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-  <variable scope="context" name="mdcPattern" value="%replace( emp:%X{emp} org:%X{org} ) {'[a-z]+:( |$)', ''}}"/>
+
+  <jmxConfigurator />
+
+  <variable scope="context" name="mdcPatternEmp" value="%replace( emp:%X{emp} org:%X{org} ) {'[a-z]+:( |$)', ''}}"/>
+  <variable scope="context" name="mdcPattern" value="%replace(field=%X{field} id=%X{id} mapping=%X{mapping}){'[a-z]+=( |$)', ''}"/>
   <variable scope="context" name="logPattern" value="%-5p %d [%t] [${mdcPattern}] %c{20}: %m%n"/>
-  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder>
-      <pattern>${logPattern}</pattern>
-    </encoder>
+
+  <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+    <layout class="ch.qos.logback.classic.PatternLayout">
+      <pattern>%-5p %d [%t] [%replace(ip=%X{remoteAddress} username=%X{userName} session=%X{session} request=%X{request}){'(\w+=)( |$)',''}] %c{20}: %replace(%m){'\n',''}%n</pattern>
+    </layout>
   </appender>
 
-  <root level="DEBUG">
-    <appender-ref ref="STDOUT" />
+  <root>
+    <level value="INFO"/>
+    <appender-ref ref="console"/>
   </root>
-
 </configuration>

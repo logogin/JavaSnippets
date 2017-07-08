@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+  <bean name="connectionConfigFactory" class="org.apache.ftpserver.ConnectionConfigFactory"/>
+  <bean name="sslConfigurationFactory" class="logogin.app.ftpserver.spring.SslConfigurationFactory"/>
+  <!-- <bean name="sslConfigurationFactory" class="org.apache.ftpserver.ssl.SslConfigurationFactory"/> -->
+  <bean name="dataConnectionConfigurationFactory" class="org.apache.ftpserver.DataConnectionConfigurationFactory"/>
+
+  <bean name="listenerFactory" class="org.apache.ftpserver.listener.ListenerFactory">
+    <property name="sslConfiguration">
+      <bean factory-bean="sslConfigurationFactory" factory-method="createSslConfiguration"/>
+    </property>
+    <property name="dataConnectionConfiguration">
+      <bean factory-bean="dataConnectionConfigurationFactory" factory-method="createDataConnectionConfiguration"/>
+    </property>
+  </bean>
+
+  <bean name="ftpServerFactory" class="org.apache.ftpserver.FtpServerFactory">
+    <property name="connectionConfig">
+      <bean factory-bean="connectionConfigFactory" factory-method="createConnectionConfig"/>
+    </property>
+    <property name="listeners">
+      <map>
+        <entry key="default">
+          <bean factory-bean="listenerFactory" factory-method="createListener"/>
+        </entry>
+      </map>
+    </property>
+    <property name="ftplets">
+      <map>
+        <entry key="ftplet" value-ref="commandFtplet"/>
+      </map>
+    </property>
+    <property name="userManager" ref="userManager"/>
+    <property name="fileSystem" ref="ftpFsFactory"/>
+  </bean>
+
+  <bean name="ftpServer" factory-bean="ftpServerFactory" factory-method="createServer"/>
+
+</beans>

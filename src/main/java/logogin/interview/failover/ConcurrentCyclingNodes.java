@@ -1,4 +1,4 @@
-package logogin.example2;
+package logogin.interview.failover;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -8,8 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * ConcurrentCyclingNodes.java
  *
- * @created Nov 29, 2012
- * @author Pavel Danchenko
+ * @created Nov 5, 2012
+ * @author logogin
  */
 public class ConcurrentCyclingNodes<T> {
 
@@ -25,7 +25,20 @@ public class ConcurrentCyclingNodes<T> {
         return nodes[current];
     }
 
-    public Iterable<T> items() {
+
+    /**
+     * @param infinite if true - cycle infinitely, false - single loop over all items
+     * @return Iterable<T>
+     */
+    public Iterable<T> items(boolean infinite) {
+        if ( infinite ) {
+            return new Iterable<T>() {
+                @Override
+                public Iterator<T> iterator() {
+                    return infiniteIterator();
+                }
+            };
+        }
         return new Iterable<T>() {
             @Override
             public Iterator<T> iterator() {
@@ -38,10 +51,12 @@ public class ConcurrentCyclingNodes<T> {
         return new Iterator<T>() {
             int returned = 0;
 
+            @Override
             public boolean hasNext() {
                 return returned < ConcurrentCyclingNodes.this.size();
             }
 
+            @Override
             public T next() {
                 if(hasNext()) {
                     T item = ConcurrentCyclingNodes.this.next();
@@ -51,6 +66,26 @@ public class ConcurrentCyclingNodes<T> {
                 throw new NoSuchElementException();
             }
 
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    public Iterator<T> infiniteIterator() {
+        return new Iterator<T>() {
+            @Override
+            public boolean hasNext() {
+                return true;
+            }
+
+            @Override
+            public T next() {
+                return ConcurrentCyclingNodes.this.next();
+            }
+
+            @Override
             public void remove() {
                 throw new UnsupportedOperationException();
             }

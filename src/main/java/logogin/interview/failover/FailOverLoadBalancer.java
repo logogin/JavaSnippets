@@ -1,4 +1,4 @@
-package logogin.example2;
+package logogin.interview.failover;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,28 +6,29 @@ import org.slf4j.LoggerFactory;
 /**
  * FailOverLoadBalancer.java
  *
- * @created Nov 29, 2012
- * @author Pavel Danchenko
+ * @created Nov 5, 2012
+ * @author logogin
  */
-public class FailOverLoadBalancer {
+public class FailOverLoadBalancer<R> {
 
     private static final Logger log = LoggerFactory.getLogger(FailOverLoadBalancer.class);
 
-    /**
-     * Unit of work on single node
-     */
+    private boolean logFailedOperations = false;
+
     public interface Operation<T, R> {
         /**
-         * @param node - for this operation
+         * @param node
          * @return R for success and stop of failover, null or exception to continue
          */
         public R execute(T node);
+
+        public void handleFailure(T node, Throwable exception);
     }
 
     /**
-     * @param nodes - cycling nodes
-     * @param maxAttempts - including successful, i.e. maximum number executions of operation.
-     * @param operation - over single node
+     * @param nodes
+     * @param maxAttempts
+     * @param operation
      * @return true if operation succeeded, false if all attempts failed
      */
     public <T, R> R failOver(ConcurrentCyclingNodes<T> nodes, int maxAttempts, Operation<T, R> operation) {
@@ -35,14 +36,28 @@ public class FailOverLoadBalancer {
             T node = nodes.next();
             try {
                 R result = operation.execute(node);
-                if ( null != result ) {
+                if ( !continueFailOver(result) ) {
                     //got the result, should stop cycling, success
                     return result;
                 }
             } catch (Throwable ex) {
-                log.warn("Exception caught while executing operation={} on node={}", operation, node, ex);
+                if ( logFailedOperations ) {
+                    log.warn("Exception caught while executing operation={} on node={}", operation, node, ex);
+                }
+                operation.handleFailure(node, ex);
             }
         }
         return null;
+    }
+
+    public boolean continueFailOver(R result) {
+        if ( null == result ) {
+            return true;
+        }
+        return false;
+    }
+
+    public void setLogFailedOperations(boolean logFailedOperations) {
+        this.logFailedOperations = logFailedOperations;
     }
 }

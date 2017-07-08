@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <variable scope="context" name="mdcPattern" value="%replace( emp:%X{emp} org:%X{org} ) {'[a-z]+:( |$)', ''}}"/>
+  <variable scope="context" name="logPattern" value="%-5p %d [%t] [${mdcPattern}] %c{20}: %m%n"/>
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${logPattern}</pattern>
+    </encoder>
+  </appender>
+
+  <root level="DEBUG">
+    <appender-ref ref="STDOUT" />
+  </root>
+
+</configuration>
